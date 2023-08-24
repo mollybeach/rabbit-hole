@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>My first three.js app</title>
+		<style>
+			body { margin: 0; }
+		</style>
+	</head>
+	<body>
+		<video
+		id="video"
+		playsinline
+		webkit-playsinLine
+		loop
+		autoplay
+		muted
+		width="1290"
+		height="1040"
+		src="./houseModel.mp4"
+		></video>
+		<script type="module" >
+			//main.js
+			import * as THREE from 'three';
+			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+			//SCENE
+			const scene = new THREE.Scene();
+			const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+
+			//CANVAS
+			// const canvas = document.querySelector("#c");
+
+			//RENDERER
+			const renderer = new THREE.WebGLRenderer({ antialias: true });
+
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			renderer.setPixelRatio( window.devicePixelRatio );
+			document.body.appendChild( renderer.domElement );
+
+			
+
+			const loader = new THREE.CubeTextureLoader();
+			loader.setPath( 'cube/' );
+
+			const textureCube = loader.load( [
+				'px.jpg', 'nx.jpg',
+				'py.jpg', 'ny.jpg',
+				'pz.jpg', 'nz.jpg'
+			] );
+
+			//MATERIALS
+		/*	const geometry = new THREE.BoxGeometry( 100, 100, 100 );
+			//const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+			const material = new THREE.MeshBasicMaterial( { color: 0xffffff, envMap: textureCube } );
+			const cube = new THREE.Mesh( geometry, material );
+			scene.add( cube ); */
+
+			//CREATE MATERIAL - IMAGE TEXTURES OF VIDEO
+		
+			let video = document.getElementById( 'video' ); // link video HTML element to JS
+			let videoTexture = new THREE.VideoTexture(video); // create texture for video
+			//post process texture
+    		//PIXEL = dot in a digital image; TEXEL = dot in a texture image
+    		videoTexture.minFilter = THREE.LinearFilter; //how texture is sampled when texel < 1
+    		videoTexture.magFilter = THREE.LinearFilter; //how texture is sampled when texel > 1
+
+    		let movieMaterial = new THREE.MeshBasicMaterial({
+    		  map: videoTexture,
+    		  side: THREE.FrontSide, // show video front of texture
+    		  toneMapped: false, //disable tone mapping
+    		});
+
+
+			// CREATE OBJECT TO DISPLAY VIDEO
+			// let movieGeometry = new THREE.PlaneGeometry( 80, 400);
+			let movieGeometry = new THREE.BoxGeometry( 100, 100, 100 );
+			let movieCubeScreen = new THREE.Mesh( movieGeometry, movieMaterial );
+			movieCubeScreen.position.set(0, 50, 0);
+			camera.position.set(0, 150, 300);
+			camera.lookAt(movieCubeScreen.position);
+
+			//CREATE ORBIT CONTROLS
+			const controls = new OrbitControls( camera, renderer.domElement );
+
+			animate();
+
+			//RENDER LOOP
+			function animate() {
+				requestAnimationFrame( animate );
+				
+				controls.update();
+				//update video texture new image of video (video is series of images)
+				videoTexture.needsUpdate = true;
+				renderer.render( scene, camera );
+			}
+			
+			//KEYBOARD CONTROLS
+			document.onkeydown = function(e){
+				if(e.keyCode == 80){
+					//p key plays video
+					console.log("p key pressed to play");
+					console.log(video);
+					video.play();
+				} else if(e.keyCode == 32){
+					console.log("spacebar pressed to pause");
+					//spacebar pauses video
+					video.pause();
+				} else if(e.keyCode == 83){
+					//s key stops video
+					console.log("s key pressed to stop");
+					video.pause();
+					video.currentTime = 0;
+				} else if(e.keyCode == 82){
+					//r key restarts video
+					console.log("r key pressed to restart");
+					video.currentTime = 0;
+					video.play();
+				}
+			}
+		</script>
+	</body>
+</html>
+
+
